@@ -27,6 +27,61 @@ This kit sits on top of two upstream layers. From bottom to top:
 - **everything-claude-code** (optional) — a much larger community library by [@affaan-m](https://github.com/affaan-m/everything-claude-code) that layers additional skills and agents on top of superpowers. Worth installing if you want the full buffet.
 - **claude-code-kit** (this repo) — a narrow, opinionated set of 9 workflow skills (`gstack`) and 2 subagents (`gsd`) curated and adapted from the broader ecosystem, plus sanitized `settings.json`, a status line, and notification hooks. The skills explicitly reference and compose with `superpowers:*` primitives — they're extensions, not replacements.
 
+## How it all fits together
+
+```mermaid
+flowchart TD
+    classDef sp fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef gs fill:#065f46,stroke:#047857,color:#fff
+    classDef ag fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef dec fill:#374151,stroke:#4b5563,color:#fff
+
+    Start([Session start]):::dec --> Resume{Resuming<br/>prior work?}:::dec
+    Resume -- no, fresh --> Brain
+    Resume -- from save --> Restore[context-restore]:::gs --> Brain
+    Resume -- from freeze --> Unfreeze[unfreeze]:::gs --> Execute
+
+    Brain[brainstorming]:::sp --> WP[writing-plans]:::sp
+    WP --> Review{Plan review}:::dec
+    Review --> Eng[plan-eng-review]:::gs
+    Review --> CEO[plan-ceo-review]:::gs
+    Eng --> Approved[Plan approved]:::dec
+    CEO --> Approved
+
+    Approved --> Scan{Unknown<br/>codebase?}:::dec
+    Scan -- yes --> CM[codebase-mapper]:::ag --> NewFiles
+    Scan -- no --> NewFiles{Adding 3+<br/>files?}:::dec
+    NewFiles -- yes --> PM[pattern-mapper]:::ag --> Execute
+    NewFiles -- no --> Execute[executing-plans]:::sp
+
+    Execute --> TDD[test-driven-development]:::sp
+    TDD --> Pass{Tests pass?}:::dec
+    Pass -- no --> Dbg[systematic-debugging]:::sp
+    Dbg --> Stuck{Still stuck?}:::dec
+    Stuck -- yes --> Inv[investigate]:::gs --> TDD
+    Stuck -- no --> TDD
+    Pass -- yes --> Verify[verification-before-completion]:::sp
+
+    Verify --> CR[requesting-code-review<br/>code-reviewer agent]:::sp
+    CR --> Finish[finishing-a-development-branch]:::sp
+    Finish --> External{Merge / deploy /<br/>release?}:::dec
+    External -- yes --> Ship[ship]:::gs --> Retro
+    External -- no --> Retro[retro]:::gs
+
+    Retro --> Next{What next?}:::dec
+    Next -- pause a while --> Freeze[freeze]:::gs
+    Next -- save context --> Save[context-save]:::gs
+    Next -- done --> Stop([Session end]):::dec
+    Freeze --> Stop
+    Save --> Stop
+```
+
+**Legend:** <span style="color:#1e40af">■</span> superpowers skill &nbsp; <span style="color:#047857">■</span> gstack skill (this kit) &nbsp; <span style="color:#9a3412">■</span> gsd agent (this kit) &nbsp; <span style="color:#4b5563">■</span> decision / state
+
+### The loop in one paragraph
+
+A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
+
 ## What's inside
 
 ```

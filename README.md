@@ -37,24 +37,20 @@ This kit sits on top of two upstream layers. From bottom to top:
 flowchart TB
     classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
 
-    E[Entry<br/>fresh · context-restore · unfreeze]:::phase
-    P[Plan<br/>brainstorm → write-plan<br/>→ plan-eng-review · plan-ceo-review]:::phase
-    M[Pre-impl<br/>codebase-mapper · pattern-mapper]:::phase
-    X[Execute<br/>execute-plan → TDD<br/>→ debug → investigate]:::phase
-    H[Handoff<br/>verify → code-review<br/>→ finish-branch → ship]:::phase
-    C[Close<br/>retro · context-save · freeze]:::phase
-
-    subgraph row1 [" "]
+    subgraph top [" "]
         direction LR
-        E --> P --> M
+        E[<b>Entry</b><br/>fresh · context-restore · unfreeze]:::phase --> P[<b>Plan</b><br/>brainstorm → write-plan → review]:::phase --> M[<b>Pre-impl</b><br/>codebase-mapper · pattern-mapper]:::phase
     end
 
-    subgraph row2 [" "]
+    subgraph bottom [" "]
         direction LR
-        X --> H --> C
+        X[<b>Execute</b><br/>execute-plan · TDD · debug · investigate]:::phase --> H[<b>Handoff</b><br/>verify · review · finish · ship]:::phase --> C[<b>Close</b><br/>retro · context-save · freeze]:::phase
     end
 
-    M --> X
+    M -.-> X
+
+    style top fill:transparent,stroke:transparent
+    style bottom fill:transparent,stroke:transparent
 ```
 
 A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
@@ -172,15 +168,12 @@ The installer copies everything into `~/.claude/` (respects `$CLAUDE_HOME`) and 
 
 Then, inside Claude Code, install the plugins listed in [docs/plugins.md](docs/plugins.md) (at minimum: `superpowers`) and restart.
 
-## What `superpowers` brings
+## The upstream layers, documented
 
-Worth knowing what's downstairs before you use the skills upstairs. Superpowers ships with ~14 skills, 1 agent, and 3 slash commands:
+- **[docs/superpowers.md](docs/superpowers.md)** — full tables for the 14 skills, 1 agent, and 3 commands that superpowers ships.
+- **[docs/everything-claude-code.md](docs/everything-claude-code.md)** — full tables for all 48 agents and 183 skills from `everything-claude-code`, grouped by domain.
 
-**Skills** — `brainstorming`, `systematic-debugging`, `test-driven-development`, `writing-plans`, `executing-plans`, `using-git-worktrees`, `verification-before-completion`, `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch`, `writing-skills`, `using-superpowers` (the meta-skill that runs at session start).
-
-**Agent** — `code-reviewer`.
-
-**Commands** — `/brainstorm`, `/write-plan`, `/execute-plan`.
+Both docs are structured like the `gstack` / `gsd` tables below — name and one-line description per row — so you can scan the whole ecosystem in one place.
 
 ## `gstack` — 9 workflow skills (this kit)
 

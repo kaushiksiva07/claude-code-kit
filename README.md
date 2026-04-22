@@ -34,23 +34,28 @@ This kit sits on top of two upstream layers. From bottom to top:
 ### Zoomed-out: the six phases
 
 ```mermaid
-flowchart LR
+flowchart TB
     classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
 
-    E[Entry<br/>fresh · context-restore · unfreeze]:::phase
-    P[Plan<br/>brainstorm → write-plan<br/>→ plan-eng-review · plan-ceo-review]:::phase
-    M[Pre-impl<br/>codebase-mapper<br/>pattern-mapper]:::phase
-    X[Execute<br/>execute-plan → TDD loop<br/>debug · investigate]:::phase
-    H[Handoff<br/>verify → code-review<br/>→ finishing-a-branch → ship]:::phase
-    C[Close<br/>retro · context-save · freeze]:::phase
+    subgraph top [" "]
+        direction LR
+        E[Entry<br/>fresh · context-restore<br/>· unfreeze]:::phase --> P[Plan<br/>brainstorm → write-plan<br/>→ plan-eng-review<br/>· plan-ceo-review]:::phase --> M[Pre-impl<br/>codebase-mapper<br/>· pattern-mapper]:::phase
+    end
 
-    E --> P --> M --> X --> H --> C
+    subgraph bottom [" "]
+        direction LR
+        X[Execute<br/>execute-plan → TDD loop<br/>· debug · investigate]:::phase --> H[Handoff<br/>verify → code-review<br/>→ finishing-a-branch<br/>→ ship]:::phase --> C[Close<br/>retro · context-save<br/>· freeze]:::phase
+    end
+
+    M --> X
+
+    style top fill:transparent,stroke:transparent
+    style bottom fill:transparent,stroke:transparent
 ```
 
 A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
 
-<details>
-<summary><b>Click to expand: detailed lifecycle with every skill and decision point</b></summary>
+### Detailed lifecycle
 
 ```mermaid
 flowchart TD
@@ -130,8 +135,6 @@ flowchart TD
     style handoff fill:#0b1020,stroke:#4b5563,color:#fff
     style close fill:#0b1020,stroke:#4b5563,color:#fff
 ```
-
-</details>
 
 ## What's inside
 

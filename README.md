@@ -2,7 +2,30 @@
 
 An opinionated starter kit for [Claude Code](https://docs.anthropic.com/claude-code) — the configuration, the agents, the skills, and the notification hooks — packaged so you can drop it into a fresh machine and have a working setup in under a minute.
 
-The contents were curated from [`affaan-m/everything-claude-code`](https://github.com/affaan-m/everything-claude-code) (an excellent, much larger library) and trimmed to the subset that gets used in day-to-day work.
+## The stack
+
+This kit sits on top of two upstream layers. From bottom to top:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  claude-code-kit  →  gstack (9 skills) + gsd (2 agents)  │  ← this repo
+│                     + settings, statusline, notify hooks │
+├──────────────────────────────────────────────────────────┤
+│  everything-claude-code  →  180+ skills, 36+ agents      │  ← optional
+│  (affaan-m/everything-claude-code)                       │
+├──────────────────────────────────────────────────────────┤
+│  superpowers  →  brainstorming, systematic-debugging,    │  ← required
+│                  TDD, writing-plans, executing-plans,    │
+│                  using-git-worktrees, verification-before│
+│                  -completion, code-reviewer agent, …     │
+├──────────────────────────────────────────────────────────┤
+│  Claude Code CLI                                         │
+└──────────────────────────────────────────────────────────┘
+```
+
+- **superpowers** (required) — Anthropic's skill-based workflow plugin. Provides the discipline primitives (brainstorming, systematic-debugging, TDD, writing/executing plans, git worktrees, verification, code review). Everything else composes with these.
+- **everything-claude-code** (optional) — a much larger community library by [@affaan-m](https://github.com/affaan-m/everything-claude-code) that layers additional skills and agents on top of superpowers. Worth installing if you want the full buffet.
+- **claude-code-kit** (this repo) — a narrow, opinionated set of 9 workflow skills (`gstack`) and 2 subagents (`gsd`) curated and adapted from the broader ecosystem, plus sanitized `settings.json`, a status line, and notification hooks. The skills explicitly reference and compose with `superpowers:*` primitives — they're extensions, not replacements.
 
 ## What's inside
 
@@ -10,8 +33,8 @@ The contents were curated from [`affaan-m/everything-claude-code`](https://githu
 claude-code-kit/
 ├── .claude/
 │   ├── settings.template.json   # Sanitized settings.json — model, hooks, plugins
-│   ├── agents/                  # 2 curated subagents (gsd)
-│   ├── skills/                  # 9 curated workflow skills (gstack)
+│   ├── agents/                  # gsd — 2 curated subagents
+│   ├── skills/                  # gstack — 9 curated workflow skills
 │   ├── statusline-command.sh    # Status line: tokens, context %, rate-limit bars
 │   ├── terminal-notify.js       # Windows Terminal color-per-state hook
 │   └── terminal-notify.ps1      # Same, PowerShell variant
@@ -34,27 +57,37 @@ cd claude-code-kit
 
 The installer copies everything into `~/.claude/` (respects `$CLAUDE_HOME`) and drops `settings.template.json` at `~/.claude/settings.json` **only if it doesn't already exist** — your existing config is safe.
 
-Then, inside Claude Code, install the three plugins listed in [docs/plugins.md](docs/plugins.md) and restart.
+Then, inside Claude Code, install the plugins listed in [docs/plugins.md](docs/plugins.md) (at minimum: `superpowers`) and restart.
 
-## `gstack` — 9 workflow skills
+## What `superpowers` brings
 
-A sprint loop for non-trivial work:
+Worth knowing what's downstairs before you use the skills upstairs. Superpowers ships with ~14 skills, 1 agent, and 3 slash commands:
+
+**Skills** — `brainstorming`, `systematic-debugging`, `test-driven-development`, `writing-plans`, `executing-plans`, `using-git-worktrees`, `verification-before-completion`, `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review`, `receiving-code-review`, `finishing-a-development-branch`, `writing-skills`, `using-superpowers` (the meta-skill that runs at session start).
+
+**Agent** — `code-reviewer`.
+
+**Commands** — `/brainstorm`, `/write-plan`, `/execute-plan`.
+
+## `gstack` — 9 workflow skills (this kit)
+
+Sprint-loop primitives that compose with superpowers' discipline skills:
 
 | Skill             | When to use it                                                           |
 |-------------------|--------------------------------------------------------------------------|
-| `investigate`     | Disciplined exploration before writing a plan                            |
-| `plan-eng-review` | Review a plan for engineering soundness                                  |
+| `investigate`     | Heavier-weight forensic pass when `superpowers:systematic-debugging` doesn't close the bug |
+| `plan-eng-review` | Review a plan for engineering soundness before `/execute-plan`            |
 | `plan-ceo-review` | Review a plan against product strategy / user value                      |
-| `ship`            | Structured release checklist — tests, docs, PR, changelog                |
-| `retro`           | Post-ship retrospective that turns lessons into feedback-memory pointers |
+| `ship`            | Final pre-handoff gate — tests, review, scope-drift, verify-after-deploy |
+| `retro`           | Post-ship retrospective that turns lessons into durable memory           |
 | `context-save`    | Snapshot the session's working context into a durable file               |
 | `context-restore` | Load a saved context into a new session                                  |
 | `freeze`          | Pause point — stash open threads, mark where work left off               |
 | `unfreeze`        | Resume from a freeze cleanly                                             |
 
-## `gsd` — 2 subagents
+## `gsd` — 2 subagents (this kit)
 
-Delegate-and-summarize agents that work hard on a narrow task so the parent session stays lean:
+Delegate-and-summarize agents that do heavy work on a narrow task so the parent session stays lean:
 
 | Agent             | Role                                                                     |
 |-------------------|--------------------------------------------------------------------------|
@@ -65,7 +98,7 @@ Both were written with a Kotlin/Android + Python Lambda codebase in mind — the
 
 ## What the settings template gives you
 
-- `model: opus`, `effortLevel: high` — lean into the smartest settings by default.
+- `model: opus`, `effortLevel: xhigh` — lean into the smartest settings by default.
 - `defaultMode: auto` + `skipAutoPermissionPrompt: true` — Claude runs without constant permission prompts. Revert if you want stricter gates.
 - `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` — stays on 200K context (cheaper, faster). Remove the env var if you need the long window.
 - Status line with tokens / context usage / 5-hour + 7-day rate-limit bars.
@@ -77,8 +110,8 @@ Safe. It overwrites agents, skills, and the scripts (that's how you pick up upda
 
 ## Credits
 
-- Agents and workflow skills curated from [`affaan-m/everything-claude-code`](https://github.com/affaan-m/everything-claude-code).
-- Built on top of Anthropic's [superpowers](https://github.com/anthropics/claude-code) plugin.
+- Built on top of Anthropic's [superpowers](https://github.com/anthropics/claude-code) plugin — the foundation that makes the skill-based workflow possible.
+- Curated and adapted, with inspiration from [`affaan-m/everything-claude-code`](https://github.com/affaan-m/everything-claude-code) — the broader community library worth checking out if you want more than this kit provides.
 
 ## License
 

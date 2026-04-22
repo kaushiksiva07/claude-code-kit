@@ -34,23 +34,17 @@ This kit sits on top of two upstream layers. From bottom to top:
 ### Zoomed-out: the six phases
 
 ```mermaid
-flowchart TB
+flowchart LR
     classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
+    E[<b>Entry</b><br/>fresh · context-restore · unfreeze]:::phase --> P[<b>Plan</b><br/>brainstorm → write-plan → review]:::phase --> M[<b>Pre-impl</b><br/>codebase-mapper · pattern-mapper]:::phase
+```
 
-    subgraph top [" "]
-        direction LR
-        E[<b>Entry</b><br/>fresh · context-restore · unfreeze]:::phase --> P[<b>Plan</b><br/>brainstorm → write-plan → review]:::phase --> M[<b>Pre-impl</b><br/>codebase-mapper · pattern-mapper]:::phase
-    end
+↓
 
-    subgraph bottom [" "]
-        direction LR
-        X[<b>Execute</b><br/>execute-plan · TDD · debug · investigate]:::phase --> H[<b>Handoff</b><br/>verify · review · finish · ship]:::phase --> C[<b>Close</b><br/>retro · context-save · freeze]:::phase
-    end
-
-    M -.-> X
-
-    style top fill:transparent,stroke:transparent
-    style bottom fill:transparent,stroke:transparent
+```mermaid
+flowchart LR
+    classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
+    X[<b>Execute</b><br/>execute-plan · TDD · debug · investigate]:::phase --> H[<b>Handoff</b><br/>verify · review · finish · ship]:::phase --> C[<b>Close</b><br/>retro · context-save · freeze]:::phase
 ```
 
 A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
@@ -171,7 +165,7 @@ Then, inside Claude Code, install the plugins listed in [docs/plugins.md](docs/p
 ## The upstream layers, documented
 
 - **[docs/superpowers.md](docs/superpowers.md)** — full tables for the 14 skills, 1 agent, and 3 commands that superpowers ships.
-- **[docs/everything-claude-code.md](docs/everything-claude-code.md)** — full tables for all 48 agents and 183 skills from `everything-claude-code`, grouped by domain.
+- **[docs/everything-claude-code.md](docs/everything-claude-code.md)** — the 13 agents and 4 skills this kit actually pulls from `everything-claude-code` (upstream has 48 and 183), plus the filters used to pick them.
 
 Both docs are structured like the `gstack` / `gsd` tables below — name and one-line description per row — so you can scan the whole ecosystem in one place.
 

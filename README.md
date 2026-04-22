@@ -29,6 +29,29 @@ This kit sits on top of two upstream layers. From bottom to top:
 
 ## How it all fits together
 
+**Legend:** 🟦 superpowers skill &nbsp; 🟩 gstack skill (this kit) &nbsp; 🟧 gsd agent (this kit) &nbsp; ⬜ decision / state
+
+### Zoomed-out: the six phases
+
+```mermaid
+flowchart LR
+    classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
+
+    E[Entry<br/>fresh · context-restore · unfreeze]:::phase
+    P[Plan<br/>brainstorm → write-plan<br/>→ plan-eng-review · plan-ceo-review]:::phase
+    M[Pre-impl<br/>codebase-mapper<br/>pattern-mapper]:::phase
+    X[Execute<br/>execute-plan → TDD loop<br/>debug · investigate]:::phase
+    H[Handoff<br/>verify → code-review<br/>→ finishing-a-branch → ship]:::phase
+    C[Close<br/>retro · context-save · freeze]:::phase
+
+    E --> P --> M --> X --> H --> C
+```
+
+A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
+
+<details>
+<summary><b>Click to expand: detailed lifecycle with every skill and decision point</b></summary>
+
 ```mermaid
 flowchart TD
     classDef sp fill:#1e3a8a,stroke:#1e40af,color:#fff
@@ -36,51 +59,79 @@ flowchart TD
     classDef ag fill:#7c2d12,stroke:#9a3412,color:#fff
     classDef dec fill:#374151,stroke:#4b5563,color:#fff
 
-    Start([Session start]):::dec --> Resume{Resuming<br/>prior work?}:::dec
+    subgraph entry [Entry]
+        Start([Session start]):::dec --> Resume{Resuming<br/>prior work?}:::dec
+        Restore[context-restore]:::gs
+        Unfreeze[unfreeze]:::gs
+    end
+
+    subgraph plan [Plan]
+        Brain[brainstorming]:::sp --> WP[writing-plans]:::sp
+        WP --> Review{Plan review}:::dec
+        Review --> Eng[plan-eng-review]:::gs
+        Review --> CEO[plan-ceo-review]:::gs
+        Eng --> Approved[Plan approved]:::dec
+        CEO --> Approved
+    end
+
+    subgraph preimpl [Pre-implementation]
+        Scan{Unknown<br/>codebase?}:::dec
+        CM[codebase-mapper]:::ag
+        NewFiles{Adding 3+<br/>files?}:::dec
+        PM[pattern-mapper]:::ag
+    end
+
+    subgraph execute [Execute]
+        Exec[executing-plans]:::sp --> TDD[test-driven-development]:::sp
+        TDD --> Pass{Tests pass?}:::dec
+        Pass -- no --> Dbg[systematic-debugging]:::sp
+        Dbg --> Stuck{Still stuck?}:::dec
+        Stuck -- yes --> Inv[investigate]:::gs --> TDD
+        Stuck -- no --> TDD
+    end
+
+    subgraph handoff [Handoff]
+        Verify[verification-before-completion]:::sp
+        CR[requesting-code-review<br/>code-reviewer agent]:::sp
+        Finish[finishing-a-development-branch]:::sp
+        External{Merge / deploy /<br/>release?}:::dec
+        Ship[ship]:::gs
+    end
+
+    subgraph close [Close]
+        Retro[retro]:::gs --> Next{What next?}:::dec
+        Freeze[freeze]:::gs
+        Save[context-save]:::gs
+        Stop([Session end]):::dec
+    end
+
     Resume -- no, fresh --> Brain
-    Resume -- from save --> Restore[context-restore]:::gs --> Brain
-    Resume -- from freeze --> Unfreeze[unfreeze]:::gs --> Execute
+    Resume -- from save --> Restore --> Brain
+    Resume -- from freeze --> Unfreeze --> Exec
 
-    Brain[brainstorming]:::sp --> WP[writing-plans]:::sp
-    WP --> Review{Plan review}:::dec
-    Review --> Eng[plan-eng-review]:::gs
-    Review --> CEO[plan-ceo-review]:::gs
-    Eng --> Approved[Plan approved]:::dec
-    CEO --> Approved
+    Approved --> Scan
+    Scan -- yes --> CM --> NewFiles
+    Scan -- no --> NewFiles
+    NewFiles -- yes --> PM --> Exec
+    NewFiles -- no --> Exec
 
-    Approved --> Scan{Unknown<br/>codebase?}:::dec
-    Scan -- yes --> CM[codebase-mapper]:::ag --> NewFiles
-    Scan -- no --> NewFiles{Adding 3+<br/>files?}:::dec
-    NewFiles -- yes --> PM[pattern-mapper]:::ag --> Execute
-    NewFiles -- no --> Execute[executing-plans]:::sp
+    Pass -- yes --> Verify --> CR --> Finish --> External
+    External -- yes --> Ship --> Retro
+    External -- no --> Retro
 
-    Execute --> TDD[test-driven-development]:::sp
-    TDD --> Pass{Tests pass?}:::dec
-    Pass -- no --> Dbg[systematic-debugging]:::sp
-    Dbg --> Stuck{Still stuck?}:::dec
-    Stuck -- yes --> Inv[investigate]:::gs --> TDD
-    Stuck -- no --> TDD
-    Pass -- yes --> Verify[verification-before-completion]:::sp
+    Next -- pause a while --> Freeze --> Stop
+    Next -- save context --> Save --> Stop
+    Next -- done --> Stop
 
-    Verify --> CR[requesting-code-review<br/>code-reviewer agent]:::sp
-    CR --> Finish[finishing-a-development-branch]:::sp
-    Finish --> External{Merge / deploy /<br/>release?}:::dec
-    External -- yes --> Ship[ship]:::gs --> Retro
-    External -- no --> Retro[retro]:::gs
-
-    Retro --> Next{What next?}:::dec
-    Next -- pause a while --> Freeze[freeze]:::gs
-    Next -- save context --> Save[context-save]:::gs
-    Next -- done --> Stop([Session end]):::dec
-    Freeze --> Stop
-    Save --> Stop
+    style entry fill:#0b1020,stroke:#4b5563,color:#fff
+    style plan fill:#0b1020,stroke:#4b5563,color:#fff
+    style preimpl fill:#0b1020,stroke:#4b5563,color:#fff
+    style execute fill:#0b1020,stroke:#4b5563,color:#fff
+    style handoff fill:#0b1020,stroke:#4b5563,color:#fff
+    style close fill:#0b1020,stroke:#4b5563,color:#fff
 ```
 
-**Legend:** <span style="color:#1e40af">■</span> superpowers skill &nbsp; <span style="color:#047857">■</span> gstack skill (this kit) &nbsp; <span style="color:#9a3412">■</span> gsd agent (this kit) &nbsp; <span style="color:#4b5563">■</span> decision / state
-
-### The loop in one paragraph
-
-A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
+</details>
 
 ## What's inside
 

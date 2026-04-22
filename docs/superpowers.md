@@ -45,4 +45,4 @@ The 9 `gstack` skills and 2 `gsd` agents bundled in this repo extend the superpo
 - `gstack:ship` runs after `superpowers:finishing-a-development-branch` has decided on an integration approach — it handles the actual pre-flight for merges, deploys, and releases.
 - `gsd:codebase-mapper` and `gsd:pattern-mapper` are delegated research passes that feed into `superpowers:writing-plans` and `superpowers:executing-plans`.
 
-See the zoomed-out and detailed lifecycle diagrams in the [README](../README.md) for the full composition.
+See the lifecycle diagram in the [README](../README.md) for the full composition.

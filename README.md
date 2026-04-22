@@ -31,26 +31,6 @@ This kit sits on top of two upstream layers. From bottom to top:
 
 **Legend:** 🟦 superpowers skill &nbsp; 🟩 gstack skill (this kit) &nbsp; 🟧 gsd agent (this kit) &nbsp; ⬜ decision / state
 
-### Zoomed-out: the six phases
-
-```mermaid
-flowchart LR
-    classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
-    E[<b>Entry</b><br/>fresh · context-restore · unfreeze]:::phase --> P[<b>Plan</b><br/>brainstorm → write-plan → review]:::phase --> M[<b>Pre-impl</b><br/>codebase-mapper · pattern-mapper]:::phase
-```
-
-↓
-
-```mermaid
-flowchart LR
-    classDef phase fill:#1f2937,stroke:#9ca3af,color:#fff,stroke-width:2px
-    X[<b>Execute</b><br/>execute-plan · TDD · debug · investigate]:::phase --> H[<b>Handoff</b><br/>verify · review · finish · ship]:::phase --> C[<b>Close</b><br/>retro · context-save · freeze]:::phase
-```
-
-A session starts, `using-superpowers` routes you into the right workflow. You pick up from a prior `context-save`, a prior `freeze`, or start fresh with `brainstorm` → `write-plan`. The plan goes through `plan-eng-review` and/or `plan-ceo-review` before anyone writes code. If the codebase is unfamiliar, `codebase-mapper` runs first. If you're creating several new files, `pattern-mapper` identifies the existing analogs to copy from. Then `execute-plan` runs TDD loops; bugs go through `systematic-debugging` with `investigate` as an escalation path. Before declaring done, `verification-before-completion` and `code-reviewer` gate the handoff. If the work is leaving your machine — merge, deploy, release — `ship` runs the final pre-flight. `retro` closes the loop by turning what was learned into durable feedback memories. `context-save` or `freeze` stash what's in flight so the next session can pick it up cleanly.
-
-### Detailed lifecycle
-
 ```mermaid
 flowchart TD
     classDef sp fill:#1e3a8a,stroke:#1e40af,color:#fff
